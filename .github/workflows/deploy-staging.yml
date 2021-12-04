@@ -12,15 +12,16 @@ on:
       health_check_cmd:
         required: true
         type: string
-      docker_host:
-        required: true
-        type: string
       branch:
         required: true
         type: string
       image_tag:
         required: true
         type: string
+      staging_env:
+        required: false
+        type: string
+        default: ""
     secrets:
       PAT_FOR_DEPLOYMENT:
         required: true
@@ -53,6 +54,7 @@ jobs:
         health_check_cmd: "${{ inputs.health_check_cmd }}"
         branch: "${{ inputs.branch }}"
         gh_token: "${{ secrets.PAT_FOR_DEPLOYMENT }}"
+        staging_env: "${{ inputs.staging_env }}"
 
   deployment:
     runs-on: ubuntu-latest
@@ -71,10 +73,10 @@ jobs:
       run: mkdir -p ~/producer2 && echo "{}" > ~/producer2/producer.json
 
     - name: accept remote host key
-      run: ssh-keyscan -H ${{ inputs.docker_host }} >> ~/.ssh/known_hosts
+      run: ssh-keyscan -H ${{ matrix.ip_address }} >> ~/.ssh/known_hosts
 
     - name: create docker context
-      run: docker context create namachain-context --default-stack-orchestrator=swarm --docker host=ssh://${{ secrets.DOCKER_USERNAME }}@${{ inputs.docker_host }}
+      run: docker context create namachain-context --default-stack-orchestrator=swarm --docker host=ssh://${{ secrets.DOCKER_USERNAME }}@${{ matrix.ip_address }}
 
     - name: use docker context
       run:  docker context use namachain-context
@@ -122,7 +124,7 @@ jobs:
       # credential_service container to update the credentials
       if: matrix.health_check_cmd != '' && matrix.credential_service != ''
       run: |
-        until ssh ${{ secrets.DOCKER_USERNAME }}@${{ inputs.docker_host }} 'curl ${{ matrix.health_check_cmd }}'; do sleep 10; done
+        until ssh ${{ secrets.DOCKER_USERNAME }}@${{ matrix.ip_address }} 'curl ${{ matrix.health_check_cmd }}'; do sleep 10; done
 
         export namakey_IMAGE_TAG=latest
         export vault_IMAGE_TAG=latest
