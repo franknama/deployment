@@ -59,7 +59,7 @@ jobs:
         run: docker tag registry.namachain.com/namachain/${{ inputs.app_name }}:latest registry.namachain.com/namachain/${{ inputs.app_name }}:latest-stable
 
       - name: Publish
-        run: docker push registry.namachain.com/namachain/app --all-tags
+        run: docker push registry.namachain.com/namachain/${{ inputs.app_name }} --all-tags
 
       - name: Generate-Output
         id: generate_output
