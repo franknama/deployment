@@ -21,7 +21,7 @@ on:
       staging_env:
         required: false
         type: string
-        default: "India"
+        default: ""
     secrets:
       PAT_FOR_DEPLOYMENT:
         required: true
